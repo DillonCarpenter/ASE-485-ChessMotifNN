@@ -58,12 +58,12 @@ theme: default
 - Week 1: Finish research and architecture design
 - Week 2: Data Processing
 - Week 3: Construct Initial Neural Network
-- Week 4: Basic UI and Testing
+- Week 4: Basic Terminal Output and Testing
 ---
 ## Sprint 2
 - Week 5: Network Tuning & Training
 - Week 6: Advanced Features and Engine Integration
-- Week 7: UI improvements and Evaluation
+- Week 7: Improve Terminal output to account for new features and information.
 - Week 8: Finish Research Paper and Documentation and Flex
 ---
 **Design Goal:**  
