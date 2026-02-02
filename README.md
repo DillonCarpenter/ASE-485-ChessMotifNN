@@ -32,10 +32,10 @@ The end goal is to create a fast, interpretable system that enhances chess learn
 - Use sigmoid activation for independent motif probabilities.
 - Evaluate using multi-label metrics such as F1 score, precision, and recall.
 
-### Engine Analysis Integration (Optional)
+### Engine Analysis Integration
 **Requirements:**
 - Provide engine evaluations for positions.
-- Optionally display best moves alongside detected motifs.
+- Display best moves alongside detected motifs.
 - Use engine output as a validation mechanism for predictions.
 
 ### Readable UI

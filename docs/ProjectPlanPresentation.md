@@ -2,30 +2,30 @@
 marp: true
 theme: default
 ---
-# Neural Network-Based Chess Motif Detection
+# Multi-Label Neural Detection of Motifs in Chess Positions
 
+##### Detecting tactical and positional chess patterns using neural networks
 ---
 # Project Description
-
-- Modern chess engines excel at calculating optimal moves but often fail to explain *why* those moves are strong in terms that humans understand. This project aims to bridge that gap by building a neural network capable of detecting tactical and positional motifs in chess positions.
-
 ---
+## Problem
+- Modern chess engines excel at calculating optimal moves but often fail to explain *why* those moves are strong in terms that humans understand. This project aims to bridge that gap by building a neural network capable of detecting tactical and positional motifs in chess positions.
+---
+## Solution
 - Using a large dataset of annotated chess puzzles, the system will analyze board states and output the motifs present in each position as a multi-label classification problem. 
+---
+## Outcome and Impact
+- The end goal is to create a fast, interpretable system that enhances chess learning by identifying patterns such as forks, pins, and discovered attacks.
 - The tool is designed primarily as a research project, focusing on neural network design, dataset engineering, and motif detection accuracy rather than production deployment.
 
 ---
-- The end goal is to create a fast, interpretable system that enhances chess learning by identifying patterns such as forks, pins, and discovered attacks.
-
----
 # Features and Requirements
----
-## Core Features
 ---
 ### Motif Detection
 **Requirements:**
 - Detect well-established chess motifs (e.g., pins, forks, discovered attacks, weak squares, open files).
 - Accept any valid FEN position as input.
-- Achieve performance significantly better than random classification.
+- Target macro F1 ≥ 0.60 on the test set, balancing precision (correct positive predictions) and recall (ability to identify all true motifs).
 - Support expansion as additional motifs are introduced.
 ---
 ### Multi-label Output
@@ -35,17 +35,22 @@ theme: default
 - Use sigmoid activation for independent motif probabilities.
 - Evaluate using multi-label metrics such as F1 score, precision, and recall.
 ---
-### Engine Analysis Integration (Optional)
+### Engine Analysis Integration
 **Requirements:**
 - Provide engine evaluations for positions.
 - Optionally display best moves alongside detected motifs.
-- Use engine output as a validation mechanism for predictions.
+- Use engine output alongside neural network for contextual analysis
 ---
 ### Readable UI
 **Requirements:**
 - Display chess boards in ASCII/terminal format.
 - Output detected motifs in a clear list.
 - Maintain fast response time for near real-time analysis.
+---
+## Overall
+- Features: 4
+- 14 Requirements
+- Projected Tests: 20
 ---
 # Schedule
 ---
@@ -55,34 +60,22 @@ theme: default
 - Week 3: Construct Initial Neural Network
 - Week 4: Basic UI and Testing
 ---
-## Spring 2
+## Sprint 2
 - Week 5: Network Tuning & Training
 - Week 6: Advanced Features and Engine Integration
 - Week 7: UI improvements and Evaluation
-- Week 8: Finish Research Paper and Documention and Flex
----
-# Dataset
-- Source: Lichess puzzle dataset (via Kaggle).
-- File size: ~460MB CSV containing hundreds of thousands of puzzles, with millions available.
-- Sprint 1 subset: **10,000 puzzles** for proof-of-concept.
----
-**Key Fields Used:**
-- FEN (board state)
-- Themes (motif labels)
-- Moves (optional auxiliary data)
-- Rating / Popularity (optional filtering for data quality)
-
+- Week 8: Finish Research Paper and Documentation and Flex
 ---
 **Design Goal:**  
 Start small for rapid experimentation, then scale dataset and model complexity in Sprint 2.
 
 ---
-# LearningWithAI
+# Learning With AI
 ---
 # Neural Network Architecture
 ---
 ## Why I want to learn it
-- They are a core part of moder AI and machine learning
+- Neural Networks are a core part of modern AI and Machine Learning
 - Have lots of potential applications
 ---
 ## How I will learn with AI
@@ -93,6 +86,7 @@ Start small for rapid experimentation, then scale dataset and model complexity i
 ## Types of Neural Networks
 - Perceptrons
 - Feed Forward Networks (FNNs)
+- Convolutional Neural Network (CNNs)
 - And more
 ---
 ## Activation Functions
@@ -110,4 +104,3 @@ Start small for rapid experimentation, then scale dataset and model complexity i
 - Explain new concepts
 - Generate guides
 - Suggest libraries and tools to use
-
