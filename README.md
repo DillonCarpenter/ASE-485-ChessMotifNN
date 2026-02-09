@@ -73,6 +73,8 @@ The end goal is to create a fast, interpretable system that enhances chess learn
 **Approximate Size:** ~50k–200k parameters  
 (Small enough for fast laptop GPU training)
 
+**Activation Function:** Sigmoid Activation
+
 **Structure:**
 - Input: 8×8×12 tensor
 - 2–4 convolutional layers (32–64 filters, 3×3 kernels)
