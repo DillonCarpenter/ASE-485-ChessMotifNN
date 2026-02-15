@@ -1,0 +1,19 @@
+{
+  "name": "PyTorch GPU Container",
+  "image": "pytorch/pytorch:2.2.2-cuda12.1-cudnn8-runtime",
+  "runArgs": ["--gpus", "all"],
+  "workspaceFolder": "/workspace",
+  "mounts": [
+    "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached"
+  ],
+  "settings": {
+    "python.defaultInterpreterPath": "/usr/bin/python3"
+  },
+  "extensions": [
+    "ms-python.python",
+    "ms-toolsai.jupyter"
+  ],
+  "features": {
+  "git": "latest"
+  }
+}
