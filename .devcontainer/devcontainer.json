@@ -1,6 +1,8 @@
 {
   "name": "PyTorch GPU Container",
-  "image": "pytorch/pytorch:2.2.2-cuda12.1-cudnn8-runtime",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
   "runArgs": ["--gpus", "all"],
   "workspaceFolder": "/workspace",
   "mounts": [
@@ -14,6 +16,6 @@
     "ms-toolsai.jupyter"
   ],
   "features": {
-  "git": "latest"
+    "git": "latest"
   }
 }
