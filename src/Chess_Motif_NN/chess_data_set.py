@@ -1,0 +1,71 @@
+import torch
+from torch.utils.data import Dataset
+import pandas as pd
+import chess
+import numpy as np
+
+def fen_to_tensor(fen: str) -> torch.Tensor:
+    """
+    Convert a FEN string into a 12x8x8 tensor.
+    Channels: 6 piece types * 2 colors (white, black)
+    """
+    piece_map = {
+        'P': 0, 'N': 1, 'B': 2, 'R': 3, 'Q': 4, 'K': 5,  # White
+        'p': 6, 'n': 7, 'b': 8, 'r': 9, 'q': 10, 'k': 11  # Black
+    }
+    board = chess.Board(fen)
+    tensor = np.zeros((12, 8, 8), dtype=np.float32)
+
+    for square in chess.SQUARES:
+        piece = board.piece_at(square)
+        if piece is not None:
+            channel = piece_map[piece.symbol()]
+            row = 7 - chess.square_rank(square)  # convert rank to row
+            col = chess.square_file(square)
+            tensor[channel, row, col] = 1.0
+    return torch.from_numpy(tensor)
+
+class ChessDataset(Dataset):
+    def __init__(self, csv_file, target_theme="mateIn1", row_limit=None):
+        
+        self.target_theme = target_theme
+        
+        # Load only what we need
+        df = pd.read_csv(
+            csv_file,
+            usecols=["FEN", "Themes"],
+            nrows=row_limit   # <- KEY FEATURE
+        )
+
+        # Convert labels once (vectorized = fast)
+        labels = df["Themes"].str.contains(
+            fr"\b{target_theme}\b",
+            regex=True,
+            na=False
+        ).astype(float)
+
+        self.fens = df["FEN"].tolist()
+        self.labels = labels.tolist()
+
+        positives = int(sum(self.labels))
+        negatives = len(self.labels) - positives
+
+        print(f"""
+            Dataset Loaded:
+            Rows: {len(self.labels)}
+            Positives ({target_theme}): {positives}
+            Negatives: {negatives}
+        """)
+
+    def __len__(self):
+        return len(self.fens)
+
+    def __getitem__(self, idx):
+        fen = self.fens[idx]
+        label = self.labels[idx]
+
+        tensor = fen_to_tensor(fen)
+
+        target = torch.tensor([label], dtype=torch.float32)
+
+        return tensor, target
