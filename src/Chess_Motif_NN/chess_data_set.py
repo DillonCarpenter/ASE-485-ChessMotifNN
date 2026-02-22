@@ -26,13 +26,13 @@ def fen_to_tensor(fen: str) -> torch.Tensor:
     return torch.from_numpy(tensor)
 
 class ChessDataset(Dataset):
-    def __init__(self, csv_file, target_theme="mateIn1", row_limit=None):
+    def __init__(self, csv_path, target_theme="mateIn1", row_limit=10000):
         
         self.target_theme = target_theme
         
         # Load only what we need
         df = pd.read_csv(
-            csv_file,
+            csv_path,
             usecols=["FEN", "Themes"],
             nrows=row_limit   # <- KEY FEATURE
         )
