@@ -20,17 +20,17 @@ The end goal is to create a fast, interpretable system that enhances chess learn
 
 ### Motif Detection
 **Requirements:**
-- Detect well-established chess motifs (e.g., pins, forks, discovered attacks, weak squares, open files).
+- Detect well-established chess motifs (e.g., pins, forks, discovered attacks, weak squares, open files). - In Progress
 - Accept any valid FEN position as input.
-- Achieve performance significantly better than random classification.
-- Support expansion as additional motifs are introduced.
+- Achieve performance significantly better than random classification. - In Progress (Works for 1 motif at a time)
+- Support expansion as additional motifs are introduced. - In Progress
 
 ### Multi-label Output
 **Requirements:**
-- Allow multiple motifs per position.
+- Allow multiple motifs per position. - In Progress
 - Represent outputs as a binary vector (~130 motifs).
 - Use sigmoid activation for independent motif probabilities.
-- Evaluate using multi-label metrics such as F1 score, precision, and recall.
+- Evaluate using multi-label metrics such as F1 score, precision, and recall. - In Progress
 
 ### Engine Analysis Integration
 **Requirements:**
@@ -40,7 +40,7 @@ The end goal is to create a fast, interpretable system that enhances chess learn
 
 ### Readable UI
 **Requirements:**
-- Display chess boards in ASCII/terminal format.
+- Display chess boards in ASCII/terminal format. - In Progress
 - Output detected motifs in a clear list.
 - Maintain fast response time for near real-time analysis.
 
@@ -130,3 +130,4 @@ Start small for rapid experimentation, then scale dataset and model complexity i
 - Final Paper: TBD  
 
 ---
+
