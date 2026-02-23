@@ -55,3 +55,7 @@ pip-delete-this-directory.txt
 .mypy_cache/
 .pyre/
 __pypackages__/
+
+# Ignore data sets
+*.csv
+/data
