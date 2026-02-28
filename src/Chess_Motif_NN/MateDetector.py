@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import torch.optim as optim
 from chess_data_set import ChessDataset
 from torch.utils.data import DataLoader, random_split
@@ -8,16 +9,16 @@ from sklearn.metrics import precision_score, recall_score, f1_score
 # ----------------------------
 # Hyperparameters
 # ----------------------------
-channels = 12      # 6 piece types * 2 colors
+channels = 13      # 6 piece types * 2 colors + Side to move
 board_size = 8     # 8x8 chessboard
 batch_size = 4
-learning_rate = 0.001
+learning_rate = 0.0001
 epochs = 200         # number of training iterations
 
 # ----------------------------
 # Sample Data (simulate FEN → tensor)
 # ----------------------------
-dataset = ChessDataset(csv_path = "data/lichess_puzzle_transformed.csv", row_limit=10_000)
+dataset = ChessDataset(csv_path = "data/lichess_puzzle_transformed.csv", row_limit=20_000)
 
 # Define sizes and split
 train_size = int(0.7 * len(dataset))
@@ -34,43 +35,66 @@ test_loader  = DataLoader(test_set, batch_size=128, shuffle=False)
 # ----------------------------
 # Define the CNN Network
 # ----------------------------
-class ChessNet(nn.Module):
+class MateNet(nn.Module):
     def __init__(self):
         super().__init__()
-        self.conv1 = nn.Conv2d(channels, 32, kernel_size=3, padding=1)
-        self.relu1 = nn.ReLU()
-        self.conv2 = nn.Conv2d(32, 64, kernel_size=3, padding=1)
-        self.relu2 = nn.ReLU()
-        self.fc1 = nn.Linear(64 * board_size * board_size, 128)
-        self.relu3 = nn.ReLU()
-        self.fc2 = nn.Linear(128, 1)
+        
+        self.input = nn.Sequential(
+            nn.Conv2d(13, 64, 3, padding=1),
+            nn.BatchNorm2d(64),
+            nn.ReLU()
+        )
+
+        self.resblocks = nn.Sequential(
+            *[ResBlock(64) for _ in range(6)]
+        )
+
+        self.head = nn.Sequential(
+            nn.Conv2d(64, 32, 1),
+            nn.BatchNorm2d(32),
+            nn.ReLU(),
+            nn.AdaptiveAvgPool2d(1),
+            nn.Flatten(),
+            nn.Linear(32, 1)
+        )
 
     def forward(self, x):
-        x = self.conv1(x)
-        x = self.relu1(x)
-        x = self.conv2(x)
-        x = self.relu2(x)
-        x = x.view(x.size(0), -1)  # flatten
-        x = self.fc1(x)
-        x = self.relu3(x)
-        x = self.fc2(x)
+        x = self.input(x)
+        x = self.resblocks(x)
+        x = self.head(x)
         return x
+    
+class ResBlock(nn.Module):
+    def __init__(self, channels):
+        super().__init__()
+        self.conv1 = nn.Conv2d(channels, channels, 3, padding=1)
+        self.bn1 = nn.BatchNorm2d(channels)
+        self.conv2 = nn.Conv2d(channels, channels, 3, padding=1)
+        self.bn2 = nn.BatchNorm2d(channels)
 
+    def forward(self, x):
+        residual = x
+        x = F.relu(self.bn1(self.conv1(x)))
+        x = self.bn2(self.conv2(x))
+        x = F.dropout(x, p=0.3, training=self.training) #Regularization technique
+        return F.relu(x + residual)
 
 # Instantiate the model
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model = ChessNet().to(device)
+model = MateNet().to(device)
 
 # ----------------------------
 # Loss function and optimizer
 # ----------------------------
-pos_weight = torch.tensor([dataset.negatives / dataset.positives], device=device)
+#pos_weight = torch.tensor([dataset.negatives / dataset.positives], device=device)
+pos_weight = torch.tensor([4.0], device=device)
 criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
-optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+optimizer = optim.Adam(model.parameters(), lr=learning_rate, weight_decay=1e-4)
+torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
 
 best_f1 = 0.0
-best_val_loss = 100000
-patience = 5
+best_avg_val_loss = 100000
+patience = 15
 patience_counter = 0
 # threshold = .5
 for epoch in range(epochs):
@@ -90,6 +114,7 @@ for epoch in range(epochs):
         loss = criterion(outputs, targets)
 
         loss.backward()
+        torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
         optimizer.step()
 
         running_loss += loss.item()
@@ -150,13 +175,13 @@ for epoch in range(epochs):
     if(patience_counter >= patience):
         break
     """
-    if(val_loss < best_val_loss):
-        best_val_loss = val_loss
+    if(avg_val_loss < best_avg_val_loss):
+        best_avg_val_loss = avg_train_loss
         patience_counter = 0
         best_model_weights = model.state_dict().copy()
-    elif(val_loss > best_val_loss):
+    elif(avg_val_loss > best_avg_val_loss):
         patience_counter += 1
-    if(patience_counter >= patience):
+    if(patience_counter > patience):
         break
     print(f"Epoch {epoch+1}/{epochs}, "
           f"Train Loss: {avg_train_loss:.4f}, "
@@ -167,7 +192,7 @@ for epoch in range(epochs):
 # Save the trained model
 # ----------------------------
 model.load_state_dict(best_model_weights)
-torch.save(model.state_dict(), "models/basic_chess_model.pt")
+torch.save(model.state_dict(), "models/mate_detector.pt")
 print("Model saved to chess_model.pth")
 
 # ----------------------------
