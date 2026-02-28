@@ -14,11 +14,12 @@ board_size = 8     # 8x8 chessboard
 batch_size = 4
 learning_rate = 0.0001
 epochs = 200         # number of training iterations
+threshold = 0.35
 
 # ----------------------------
 # Sample Data (simulate FEN → tensor)
 # ----------------------------
-dataset = ChessDataset(csv_path = "data/lichess_puzzle_transformed.csv", row_limit=20_000)
+dataset = ChessDataset(csv_path = "data/lichess_puzzle_transformed.csv", row_limit=20_000, target_theme="advancedPawn")
 
 # Define sizes and split
 train_size = int(0.7 * len(dataset))
@@ -46,7 +47,7 @@ class MateNet(nn.Module):
         )
 
         self.resblocks = nn.Sequential(
-            *[ResBlock(64) for _ in range(6)]
+            *[ResBlock(64) for _ in range(4)]
         )
 
         self.head = nn.Sequential(
@@ -86,8 +87,8 @@ model = MateNet().to(device)
 # ----------------------------
 # Loss function and optimizer
 # ----------------------------
-#pos_weight = torch.tensor([dataset.negatives / dataset.positives], device=device)
-pos_weight = torch.tensor([4.0], device=device)
+pos_weight = torch.tensor([dataset.negatives / dataset.positives], device=device) * .75
+#pos_weight = torch.tensor([4.0], device=device)
 criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
 optimizer = optim.Adam(model.parameters(), lr=learning_rate, weight_decay=1e-4)
 torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
@@ -96,7 +97,6 @@ best_f1 = 0.0
 best_avg_val_loss = 100000
 patience = 15
 patience_counter = 0
-# threshold = .5
 for epoch in range(epochs):
     # ----------------------------
     # Training
@@ -140,7 +140,7 @@ for epoch in range(epochs):
             val_loss += loss.item()
             #metrics
             probs = torch.sigmoid(outputs)
-            preds = (probs > 0.2).float()
+            preds = (probs > threshold).float()
             
             all_targets.append(targets.cpu())
             #all_probs.append(probs.cpu())
@@ -176,7 +176,7 @@ for epoch in range(epochs):
         break
     """
     if(avg_val_loss < best_avg_val_loss):
-        best_avg_val_loss = avg_train_loss
+        best_avg_val_loss = avg_val_loss
         patience_counter = 0
         best_model_weights = model.state_dict().copy()
     elif(avg_val_loss > best_avg_val_loss):
@@ -192,8 +192,8 @@ for epoch in range(epochs):
 # Save the trained model
 # ----------------------------
 model.load_state_dict(best_model_weights)
-torch.save(model.state_dict(), "models/mate_detector.pt")
-print("Model saved to chess_model.pth")
+torch.save(model.state_dict(), "models/mate_detector(advancedPawn).pt")
+print("Model saved to models/mate_detector(advancedPawn).pt")
 
 # ----------------------------
 # Evaluation (simple accuracy)
@@ -212,7 +212,7 @@ with torch.no_grad():
 
         outputs = model(inputs)
         probs = torch.sigmoid(outputs)
-        preds = (probs > .2).float()
+        preds = (probs > threshold).float()
 
         all_targets.append(targets.cpu())
         all_preds.append(preds.cpu())
