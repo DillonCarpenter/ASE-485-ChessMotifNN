@@ -24,6 +24,7 @@ var/
 # Virtual environments
 venv/
 .venv/
+.vscode/
 
 # PyInstaller
 *.manifest
@@ -58,4 +59,4 @@ __pypackages__/
 
 # Ignore data sets
 *.csv
-/data
+data/
