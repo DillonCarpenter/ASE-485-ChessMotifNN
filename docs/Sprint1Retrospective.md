@@ -4,7 +4,8 @@ size: 4:3
 paginate: true
 title: Chess Motif Neural Network Sprint 1 Retrospective
 ---
-
+# Sprint 1 Retrospective
+---
 ## Project Metrics
 -  Burndown rate:
   -  5 completed
@@ -46,8 +47,8 @@ title: Chess Motif Neural Network Sprint 1 Retrospective
 
 - Week 4: Set up project, initial research.
 - Week 5: Docker, WSL2 and PyTorch setup
-- Week 6: Documentation created for running project files and setting up environment and initial neural network
-- Week 7: main.py created for users
+- Week 6: Documentation created for running project files, setting up environment, initial neural network
+- Week 7: main.py created for users, additional testing, and updating mode.
 
 ---
 
