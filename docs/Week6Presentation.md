@@ -13,5 +13,5 @@ theme: default
 - Terminal GUI and Testing
 ---
 Burndown Rate
-6 out of 14 Requirements (Both Sprints)
+6 out of 14 Requirements In Progress (Both Sprints)
 84%
