@@ -8,23 +8,20 @@ title: Chess Motif Neural Network Sprint 1 Retrospective
 ---
 ## Project Metrics
 -  Burndown rate:
-  -  5 completed
-  -  4 in progress
-  - 100% (On Schedule)
+   - 5 completed
+   - 4 in progress
+   - 100% (On Schedule)
 -   Out of 14 Requirements
 - Total LoC: **644**
 - 3 out of 4 Features in progress
-
 ---
-
-## Features and Requirements Implemented and in Progress
-
+# Sprint 1 Analysis
 ---
 
 ## What Went Wrong
 
 - Neural Networks are complicated (Lots of stuff to learn)
-- Training to find a singular chess motif might be harder than finding all of them
+- Training to find a singular chess motif might be harder than training to find all of them
 
 ---
 
@@ -48,7 +45,7 @@ title: Chess Motif Neural Network Sprint 1 Retrospective
 - Week 4: Set up project, initial research.
 - Week 5: Docker, WSL2 and PyTorch setup
 - Week 6: Documentation created for running project files, setting up environment, initial neural network
-- Week 7: main.py created for users, additional testing, and updating mode.
+- Week 7: main.py created for users, additional testing, and updating the neural network.
 
 ---
 
