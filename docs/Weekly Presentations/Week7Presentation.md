@@ -1,4 +1,4 @@
-# Week 6 Progress
+# Week 7 Progress
 ---
 ## Milestones Met
 ---
