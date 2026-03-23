@@ -27,9 +27,9 @@ The end goal is to create a fast, interpretable system that enhances chess learn
 
 ### Multi-label Output
 **Requirements:**
-- Allow multiple motifs per position. - In Progress
-- Represent outputs as a binary vector (~50 motifs).
-- Use sigmoid activation for independent motif probabilities. - Completed (Sigmoid is used for single motif)
+- Allow multiple motifs per position. - Completed
+- Represent outputs as a Tensor (60 motifs). - Completed
+- Use sigmoid activation for independent motif probabilities. - Completed
 - Evaluate using multi-label metrics such as F1 score, precision, and recall. - Completed
 
 ### Engine Analysis Integration
