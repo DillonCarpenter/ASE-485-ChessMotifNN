@@ -11,7 +11,6 @@
 ## What did I learn?
 - Model Overfits current training data
 - Many techniques to mitigate overfitting
-- 
 ---
 Burndown Rate
 - 7 completed
