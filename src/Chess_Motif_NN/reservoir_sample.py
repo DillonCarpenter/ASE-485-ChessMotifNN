@@ -9,20 +9,18 @@ This allows us to efficiently sample from a large CSV file without loading the e
 def reservoir_sample(csv_path, sample_size):
     reservoir = []
     count = 0
-    for chunk in pd.read_csv(csv_path, usecols=["FEN", "Themes"], chunksize=50000):
-        for _, row in chunk.iterrows():
+    for chunk in pd.read_csv(csv_path, usecols=["FEN", "Themes", "Moves"], chunksize=50000):
+        for row in chunk.itertuples(index=False):
             if len(reservoir) < sample_size:
                 reservoir.append(row)
             else:
-                # Reservoir replacement rule
                 j = random.randint(0, count)
                 if j < sample_size:
                     reservoir[j] = row
             count += 1
-
     return pd.DataFrame(reservoir)
 
 if __name__ == "__main__":
-    sample_df = reservoir_sample("data/lichess_puzzle_transformed.csv", 100000)
+    sample_df = reservoir_sample("data/lichess_puzzle_transformed.csv", 10000)
     print(sample_df.head())
-    sample_df.to_csv("data/chess_motif_sample_bigger.csv", index=False)
+    sample_df.to_csv("data/chess_motif_sample_with_moves.csv", index=False)

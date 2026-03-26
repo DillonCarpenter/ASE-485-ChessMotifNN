@@ -65,20 +65,26 @@ theme_to_index = {
     "xRayAttack": 58,
     "zugzwang": 59,
 }
-
-def fen_to_tensor(fen: str) -> torch.Tensor:
+def fen_to_tensor(fen: str, moves: list[str]) -> torch.Tensor:
     """
-    Convert a FEN string into a 19x8x8 tensor.
+    Convert a FEN string into a 9x8x8 tensor.
     Channels: 6 piece types * 2 colors (white, black) + 1 channel for side to move + 4 channels for castling rights + 
     1 channel for en passant target square + 1 channel for halfmove clock
+    10 channels for solution sequence (from and to squares for 5 moves). We're stopping at 5 moves deep after move[0] 
+    since according to the distribution over 90% of puzzles have a solution length of 5 or less.
     """
     piece_map = {
         'P': 0, 'N': 1, 'B': 2, 'R': 3, 'Q': 4, 'K': 5,  # White
         'p': 6, 'n': 7, 'b': 8, 'r': 9, 'q': 10, 'k': 11  # Black
     }
     board = chess.Board(fen)
-    tensor = np.zeros((19, 8, 8), dtype=np.float32)
-
+    """
+    Because in the lichess dataset, the FEN string only contains the position before the move is made, 
+    we need to apply the move to get the correct position for motif detection. 
+    This is because the puzzle doesn't actually start until move[0] is applied.
+    """
+    board.push_uci(moves[0]) # Apply the first move to get the correct position for motif detection
+    tensor = np.zeros((29, 8, 8), dtype=np.float32)
     for square in chess.SQUARES:
         piece = board.piece_at(square)
         if piece is not None:
@@ -96,11 +102,20 @@ def fen_to_tensor(fen: str) -> torch.Tensor:
     # en passant target square channel (17)
     tensor[17, :, :] = 0.0
     if board.ep_square is not None:
-        row = chess.square_rank(board.ep_square)
+        row = 7 - chess.square_rank(board.ep_square)
         col = chess.square_file(board.ep_square)
         tensor[17, row, col] = 1.0
     # halfmove clock channel (18)
     tensor[18, :, :] = board.halfmove_clock / 100.0 # normalize to [0,1]. Max is 100 due to half move and 50 move rule
+    solution_moves = moves[1:6]  # moves[0] already applied, cap at 5
+    for i, move in enumerate(solution_moves):
+        uci = chess.Move.from_uci(move)
+        from_row = 7 - chess.square_rank(uci.from_square)
+        from_col = chess.square_file(uci.from_square)
+        to_row = 7 - chess.square_rank(uci.to_square)
+        to_col = chess.square_file(uci.to_square)
+        tensor[19 + i*2,     from_row, from_col] = 1.0  # from plane
+        tensor[19 + i*2 + 1, to_row,   to_col]   = 1.0  # to plane
     return torch.from_numpy(tensor)
 def labels_to_tensor(labels: str) -> torch.Tensor: #Create a multi-hot vector for the labels
     indices = [theme_to_index[label] for label in labels.split() if label in theme_to_index]
@@ -114,12 +129,14 @@ class ChessDataset(Dataset):
         
         
         # Load only what we need
-        df = pd.read_csv(csv_path, usecols=["FEN", "Themes"])
+        df = pd.read_csv(csv_path, usecols=["FEN", "Themes", "Moves"])
 
         # Convert labels once (vectorized = fast)
         labels = df["Themes"]
         self.fens = df["FEN"].tolist()
         self.labels = labels.tolist()
+        self.moves = df["Moves"].tolist()
+
 
     def __len__(self):
         return len(self.fens)
@@ -127,8 +144,8 @@ class ChessDataset(Dataset):
     def __getitem__(self, idx):
         fen = self.fens[idx]
         labels = self.labels[idx]
-
-        tensor = fen_to_tensor(fen)
+        moves = self.moves[idx].split(" ")
+        tensor = fen_to_tensor(fen, moves)
 
         target = labels_to_tensor(labels)
 
