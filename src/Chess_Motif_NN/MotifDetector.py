@@ -1,3 +1,4 @@
+import torch.multiprocessing as mp
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -6,6 +7,7 @@ import numpy as np
 from chess_data_set_v2 import ChessDataset
 from torch.utils.data import DataLoader, random_split
 from sklearn.metrics import precision_score, recall_score, f1_score
+import os
 
 
 torch.manual_seed(42)
@@ -19,11 +21,11 @@ epochs = 200         # number of training iterations
 thresholds = np.arange(0.0, 1.0, 0.01) # Thresholds to evaluate for F1 score
 thresholds = thresholds.tolist()
 
-def load_data():
+def load_data(csv_path="data/lichess_puzzle_transformed.csv"):
     # ----------------------------
     # Sample Data (simulate FEN → tensor)
     # ----------------------------
-    dataset = ChessDataset(csv_path = "data/lichess_puzzle_transformed.csv")
+    dataset = ChessDataset(csv_path = csv_path)
 
     # Define sizes and split
     train_size = int(0.7 * len(dataset))
@@ -34,11 +36,11 @@ def load_data():
 
     # Create DataLoaders
     train_loader = DataLoader(train_set, batch_size=512, shuffle=True,
-                          pin_memory=True)
+                             pin_memory=True)
     val_loader   = DataLoader(val_set, batch_size=512, shuffle=False,
-                            pin_memory=True)
+                             pin_memory=True)
     test_loader  = DataLoader(test_set, batch_size=512, shuffle=False,
-                            pin_memory=True)
+                             pin_memory=True)
 
     return dataset, train_loader, val_loader, test_loader
 
@@ -93,7 +95,7 @@ if __name__ == "__main__":
     # Instantiate the model
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = MotifNet(num_blocks=2).to(device)
-
+    model.load_state_dict(torch.load("models/overnight_best_model.pt", map_location=device))
     # ----------------------------
     # Loss function and optimizer
     # ----------------------------
@@ -107,6 +109,7 @@ if __name__ == "__main__":
     pos_weight = num_neg / (num_pos + 1e-5)  # avoid division by zero
     pos_weight = pos_weight.float()
     pos_weight = pos_weight.to(device)
+    
     criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
     optimizer = optim.Adam(model.parameters(), lr=learning_rate, weight_decay=1e-4)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
@@ -116,13 +119,18 @@ if __name__ == "__main__":
         patience=5,        # wait 5 epochs of no improvement before reducing
         min_lr=1e-6
     )
-    torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+    #torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0) This is redundant but keeping in case it isn't.
 
     best_f1 = 0.0
     best_avg_val_loss = 100000
     patience = 15
     patience_counter = 0
     for epoch in range(epochs):
+        if os.path.exists("stop_training.txt"):
+            print("Stop file detected, saving and exiting.")
+            os.remove("stop_training.txt")
+            del train_loader, val_loader  # triggers worker shutdown
+            break
         # ----------------------------
         # Training
         # ----------------------------
@@ -184,13 +192,16 @@ if __name__ == "__main__":
     # ----------------------------
     # Save the trained model
     # ----------------------------
+    """
     model.load_state_dict(best_model_weights)
     torch.save(model.state_dict(), "models/overnight_best_model.pt")
     print("Model saved to models/overnight_best_model.pt")
-
+    """
+    print("Exited training loop")  # does this print?
     # ----------------------------
     # Evaluation (simple accuracy)
     # ----------------------------
+    model.load_state_dict(torch.load("models/overnight_best_model.pt", map_location=device))
     model.eval()
 
 
