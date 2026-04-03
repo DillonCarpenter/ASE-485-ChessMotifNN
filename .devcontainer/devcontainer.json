@@ -1,7 +1,8 @@
 {
   "name": "PyTorch GPU Container",
   "build": {
-    "dockerfile": "Dockerfile"
+    "dockerfile": "Dockerfile",
+    "context": ".."
   },
   "runArgs": ["--gpus", "all"],
   "workspaceFolder": "/workspace",
