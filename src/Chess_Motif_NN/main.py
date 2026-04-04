@@ -88,6 +88,32 @@ def fen_to_tensor(fen: str, moves: list[str]) -> torch.Tensor:
         tensor[19 + i*2,     from_row, from_col] = 1.0  # from plane
         tensor[19 + i*2 + 1, to_row,   to_col]   = 1.0  # to plane
     return torch.from_numpy(tensor)
+def sliding_window(fen: str, moves: list[str], window_size=5) -> list[torch.Tensor]:
+    """
+    Generate a list of tensors for each position in the solution sequence using a sliding window approach.
+    For example, if the solution sequence is [move1, move2, move3, move4, move5], we will generate tensors for:
+    - Position after move1 (using moves[0:5])
+    - Position after move2 (using moves[1:6])
+    - Position after move3 (using moves[2:7])
+    - Position after move4 (using moves[3:8])
+    - Position after move5 (using moves[4:9])
+    This way, we can capture the motifs that may arise at different points in the solution sequence.
+    """
+    board = chess.Board(fen)
+    tensors = []
+    current_fen = fen
+    if len(moves) < window_size:
+        # We can only make one tensor
+        return [fen_to_tensor(fen, moves)]
+    for i in range(len(moves) - window_size + 1):
+        # Classic sliding window
+        window_moves = moves[i:i+window_size]
+        tensor = fen_to_tensor(current_fen, window_moves)
+        tensors.append(tensor)
+        #However, now we need to apply the first move in the window to the board to get the correct FEN for the next window
+        board.push_uci(moves[i])
+        current_fen = board.fen()
+    return tensors
 
 def menu():
     print("=" * 50)
@@ -107,8 +133,8 @@ def menu():
 
 def main():
     settings = {
-        "MultiPV": 1,
-        "Depth": 10
+        "MultiPV": 5,
+        "Depth": 25
     }
     # Load the model
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -125,20 +151,29 @@ def main():
             engine.quit()
             return
         else:
-            print("Processing FEN...")
+            print(f"Processing FEN {choice} with Stockfish depth {settings['Depth']} and MultiPV {settings['MultiPV']}...")
             try:
                 board = chess.Board(choice)
                 info = engine.analyse(board, chess.engine.Limit(depth=settings["Depth"]), multipv=settings["MultiPV"])
-                predictions = []
                 for i in info:
-                   pv = i["pv"] #List of move objects. For simplicity, convert them to UCI strings.
-                   pv = [move.uci() for move in pv]
-                   with torch.no_grad(): #No gradient needed
-                       #Take only the first 5 moves from the pv. This will be changed to sliding window
-                       input_tensor = fen_to_tensor(choice, pv[0:5]).unsqueeze(0).to(device) #Basically add batch size of 1 to tensor as that's expected by the model. Also move to device.
-                       output = model(input_tensor)
-                       predictions = decode_predictions(output, LABELS, threshold=0.5)
-                       print(predictions)
+                    pv = i["pv"] #List of move objects. For simplicity, convert them to UCI strings.
+                    pv = [move.uci() for move in pv]
+                    tensors = sliding_window(choice, pv)
+                    with torch.no_grad(): #No gradient needed
+                        outputs = []
+                        for tensor in tensors:
+                            tensor = tensor.unsqueeze(0).to(device) #Add batch dimension and move to device
+                            output = model(tensor)
+                            outputs.append(output.cpu())
+                        
+                        stacked = torch.stack(outputs, dim=0)
+                        final = torch.max(stacked, dim=0).values #Care about if the motif shows up in the solution sequence
+                    predictions = decode_predictions(final, LABELS, threshold=0.5)
+                    multipv = i["multipv"]
+                    print(f"\nTop motifs for PV{multipv} starting with {pv[0]}:")
+                    for motif, prob in predictions:
+                        print(f"{motif}: {prob:.4f}")
+                    
             except (ValueError) as e:
                 print(f"Error processing FEN: {e}")
                 continue
