@@ -34,14 +34,14 @@ The end goal is to create a fast, interpretable system that enhances chess learn
 
 ### Engine Analysis Integration
 **Requirements:**
-- Provide engine evaluations for positions.
-- Display best moves alongside detected motifs.
-- Use engine output as a validation mechanism for predictions.
+- Provide engine evaluations for positions. - In Progress
+- Display best moves alongside detected motifs. - Completed
+- Use engine output as a validation mechanism for predictions. - Completed
 
 ### Readable UI
 **Requirements:**
 - Display chess boards in ASCII/terminal format.
-- Output detected motifs in a clear list. - In Progress
+- Output detected motifs in a clear list. - Completed
 - Maintain fast response time for near real-time analysis. - Completed
 
 ---
