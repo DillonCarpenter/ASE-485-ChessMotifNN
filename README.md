@@ -20,9 +20,9 @@ The end goal is to create a fast, interpretable system that enhances chess learn
 
 ### Motif Detection
 **Requirements:**
-- Detect well-established chess motifs (e.g., pins, forks, discovered attacks, weak squares, open files). - In Progress
+- Detect well-established chess motifs (e.g., pins, forks, discovered attacks, weak squares, open files). - Completed
 - Accept any valid FEN position as input. - Completed
-- Achieve performance significantly better than random classification. - In Progress (Works for 1 motif at a time)
+- Achieve performance significantly better than random classification. - Completed
 - Support expansion as additional motifs are introduced. - Completed
 
 ### Multi-label Output
@@ -61,9 +61,9 @@ The end goal is to create a fast, interpretable system that enhances chess learn
 ## Data Pipeline
 1. Sample 10,000 representative puzzles.
 2. Convert FEN strings into 8×8×12 tensors (piece-type channels).
-3. Map puzzle themes to a standardized motif set (~130 labels).
-4. Generate multi-label binary vectors.
-5. Split dataset into training (80%), validation (10%), and test (10%).
+3. Map puzzle themes to a standardized motif set (~60 labels).
+4. Generate multi-label vectors.
+5. Split dataset into training (70%), validation (15%), and test (15%).
 6. Store processed tensors for efficient training.
 
 ## Neural Network Architecture (Initial)
