@@ -120,6 +120,7 @@ def menu():
     print("=" * 60)
     print("        Welcome to the Chess Motif Network        ")
     print("=" * 60)
+    print("Source Code: https://github.com/DillonCarpenter/ASE-485-ChessMotifNN")
     print("Type a FEN string to test the neural network.")
     print("For example: r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 2 3")
     print("Or enter settings to change settings")
@@ -242,7 +243,7 @@ def main():
         "Minimum Threshold": 0.5
     }
     
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cpu")
     model = load_model(device)
     engine = load_engine()
     while True:
@@ -261,6 +262,8 @@ def main():
             print(f"Processing FEN {choice} with Stockfish depth {settings['Depth']} and {settings['Number of Lines']} Lines...")
             try:
                 board = chess.Board(choice)
+                ## ASCII art of a chess board for clarity
+                print(board.unicode(invert_color=True))
                 info = analyze_position(engine, board, settings)
                 for i in info:
                     pv = i["pv"] #List of move objects. For simplicity, convert them to UCI strings.
