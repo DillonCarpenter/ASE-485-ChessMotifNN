@@ -3,7 +3,14 @@ import chess
 import chess.engine
 from MotifDetector import MotifNet
 import numpy as np
-import pandas as pd
+from chess.engine import MateGiven
+import sys
+import os
+
+def resource_path(relative_path):
+    if hasattr(sys, '_MEIPASS'):
+        return os.path.join(sys._MEIPASS, relative_path)
+    return os.path.join(os.path.abspath("."), relative_path)
 
 LABELS = [
     "advancedPawn", "advantage", "anastasiaMate", "arabianMate", "attackingF2F7",
@@ -116,12 +123,15 @@ def sliding_window(fen: str, moves: list[str], window_size=5) -> list[torch.Tens
     return tensors
 
 def menu():
-    print("=" * 50)
+    print("=" * 60)
     print("        Welcome to the Chess Motif Network        ")
-    print("=" * 50)
+    print("=" * 60)
+    print("Source Code: https://github.com/DillonCarpenter/ASE-485-ChessMotifNN")
     print("Type a FEN string to test the neural network.")
+    print("For example: r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 2 3")
+    print("Or enter settings to change settings")
     print("Or enter -1 to exit the program.")
-    print("=" * 50)
+    print("=" * 60)
 
     choice = input("Your choice: ").strip()
 
@@ -130,19 +140,120 @@ def menu():
         return menu()
 
     return choice
+def load_model(device):
+    model = MotifNet(num_blocks=2)
+    model.to(device)
+    model_path = resource_path("models/overnight_best_model.pt")
+    model.load_state_dict(torch.load(model_path, map_location=device))
+    model.eval()
+    return model
+
+def load_engine():
+    engine_path = resource_path("chess_engines/stockfish-windows-x86-64-avx2.exe")
+    return chess.engine.SimpleEngine.popen_uci(engine_path)
+
+def analyze_position(engine: chess.engine.SimpleEngine, board: chess.Board, settings: dict):
+    return engine.analyse(
+        board,
+        chess.engine.Limit(depth=settings["Depth"]),
+        multipv=settings["Number of Lines"]
+    )
+
+def evaluate_pv(model, tensors, device):
+    outputs = []
+    with torch.no_grad():
+        for tensor in tensors:
+            tensor = tensor.unsqueeze(0).to(device)
+            outputs.append(model(tensor).cpu())
+
+    stacked = torch.stack(outputs, dim=0)
+    return torch.max(stacked, dim=0).values
+
+def process_pv(choice, pv, model, device, threshold=0.5):
+    pv_moves = [move.uci() for move in pv]
+    tensors = sliding_window(choice, pv_moves)
+
+    final = evaluate_pv(model, tensors, device)
+    return decode_predictions(final, LABELS, threshold=threshold)
+
+def confidence_label(p):
+    if p >= 0.90:
+        return "very confident"
+    elif p >= 0.75:
+        return "confident"
+    elif p >= 0.50:
+        return "somewhat confident"
+    else:
+        return "low confidence"
+
+def print_results(multipv: int, pv: list[str], predictions: list[tuple[str, float]], pov_score: chess.engine.PovScore):
+    print("\n" + "=" * 60)
+    print(f"Evaluation & Top Motifs — PV{multipv}")
+    print(f"Line: {' '.join(move.uci() for move in pv)}")
+    print("=" * 60)
+
+    score = pov_score.relative
+    pov = "White" if pov_score.turn else "Black"
+
+    if score == MateGiven:
+        eval_str = f"{pov} has an immediate mate (MateGiven)"
+
+    elif score.is_mate():
+        mate = score.mate()
+        if mate > 0:
+            eval_str = f"{pov} mates in {mate}"
+        else:
+            eval_str = f"{pov} is getting mated in {abs(mate)}"
+
+    else:
+        cp = score.score()
+        eval_str = f"{pov} eval: {cp/100:+.2f} cp"
+
+    print(eval_str)
+
+    print("\nTop Motifs:")
+    for i, (motif, prob) in enumerate(predictions, start=1):
+        print(f"{i:>2}. {motif:<30} {prob:.2f} ({confidence_label(prob)})")
+
+    print("=" * 60)
+def validate_fen(fen):
+    try:
+        chess.Board(fen)
+        return True
+    except ValueError:
+        return False
+def change_settings(settings):
+    print("\nCurrent settings:")
+    for key, value in settings.items():
+        print(f"{key}: {value}")
+    print("\nEnter the setting you want to change (Number of Lines, Depth, Minimum Threshold) or type 'back' to return to the menu.")
+    setting_choice = input("Your choice: ").strip()
+    if setting_choice.lower() == "back":
+        return
+    elif setting_choice in settings:
+        new_value = input(f"Enter new value for {setting_choice}: ").strip()
+        try:
+            if setting_choice in ["Number of Lines", "Depth"]:
+                new_value = int(new_value)
+            else:
+                new_value = float(new_value)
+            settings[setting_choice] = new_value
+            print(f"{setting_choice} updated to {new_value}.")
+        except ValueError:
+            print("Invalid value. Please enter a valid number.")
+    else:
+        print("Invalid setting. Please try again.")
 
 def main():
     settings = {
-        "MultiPV": 5,
-        "Depth": 25
+        "Number of Lines": 3,
+        "Depth": 10,
+        "Minimum Threshold": 0.5
     }
-    # Load the model
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = MotifNet(num_blocks=2)
-    model.to(device)
-    model.load_state_dict(torch.load("models/overnight_best_model.pt", map_location=device))
-    model.eval()
-    engine = chess.engine.SimpleEngine.popen_uci("stockfish")
+    
+    device = torch.device("cpu")
+    model = load_model(device)
+    engine = load_engine()
     while True:
         choice = menu()
         #Handle choice
@@ -150,29 +261,23 @@ def main():
             print("Exiting...")
             engine.quit()
             return
+        elif choice.lower() == "settings":
+            change_settings(settings)
         else:
-            print(f"Processing FEN {choice} with Stockfish depth {settings['Depth']} and MultiPV {settings['MultiPV']}...")
+            if not validate_fen(choice):
+                print("Invalid FEN string. Please try again.")
+                continue
+            print(f"Processing FEN {choice} with Stockfish depth {settings['Depth']} and {settings['Number of Lines']} Lines...")
             try:
                 board = chess.Board(choice)
-                info = engine.analyse(board, chess.engine.Limit(depth=settings["Depth"]), multipv=settings["MultiPV"])
+                ## ASCII art of a chess board for clarity
+                print(board.unicode(invert_color=True))
+                info = analyze_position(engine, board, settings)
                 for i in info:
                     pv = i["pv"] #List of move objects. For simplicity, convert them to UCI strings.
-                    pv = [move.uci() for move in pv]
-                    tensors = sliding_window(choice, pv)
-                    with torch.no_grad(): #No gradient needed
-                        outputs = []
-                        for tensor in tensors:
-                            tensor = tensor.unsqueeze(0).to(device) #Add batch dimension and move to device
-                            output = model(tensor)
-                            outputs.append(output.cpu())
-                        
-                        stacked = torch.stack(outputs, dim=0)
-                        final = torch.max(stacked, dim=0).values #Care about if the motif shows up in the solution sequence
-                    predictions = decode_predictions(final, LABELS, threshold=0.5)
+                    predictions = process_pv(choice, pv, model, device, settings["Minimum Threshold"])
                     multipv = i["multipv"]
-                    print(f"\nTop motifs for PV{multipv} starting with {pv[0]}:")
-                    for motif, prob in predictions:
-                        print(f"{motif}: {prob:.4f}")
+                    print_results(multipv, pv, predictions, i["score"])
                     
             except (ValueError) as e:
                 print(f"Error processing FEN: {e}")
