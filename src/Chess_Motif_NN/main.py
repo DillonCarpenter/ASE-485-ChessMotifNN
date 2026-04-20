@@ -3,8 +3,14 @@ import chess
 import chess.engine
 from MotifDetector import MotifNet
 import numpy as np
-import pandas as pd
 from chess.engine import MateGiven
+import sys
+import os
+
+def resource_path(relative_path):
+    if hasattr(sys, '_MEIPASS'):
+        return os.path.join(sys._MEIPASS, relative_path)
+    return os.path.join(os.path.abspath("."), relative_path)
 
 LABELS = [
     "advancedPawn", "advantage", "anastasiaMate", "arabianMate", "attackingF2F7",
@@ -137,12 +143,14 @@ def menu():
 def load_model(device):
     model = MotifNet(num_blocks=2)
     model.to(device)
-    model.load_state_dict(torch.load("models/overnight_best_model.pt", map_location=device))
+    model_path = resource_path("models/overnight_best_model.pt")
+    model.load_state_dict(torch.load(model_path, map_location=device))
     model.eval()
     return model
 
 def load_engine():
-    return chess.engine.SimpleEngine.popen_uci("stockfish")
+    engine_path = resource_path("chess_engines/stockfish-windows-x86-64-avx2.exe")
+    return chess.engine.SimpleEngine.popen_uci(engine_path)
 
 def analyze_position(engine: chess.engine.SimpleEngine, board: chess.Board, settings: dict):
     return engine.analyse(
