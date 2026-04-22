@@ -97,8 +97,6 @@ The end goal is to create a fast, interpretable system that enhances chess learn
 ---
 # Links to documentation, code, and so on
 
-*(To be populated during development)*
-
 - GitHub Repository:https://github.com/DillonCarpenter/ASE-485-ChessMotifNN
 - Dataset Source: [Lichess Dataset found on Kaggle](https://www.kaggle.com/datasets/annafabris/lichess-chess-puzzles)
 ---
