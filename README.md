@@ -7,10 +7,8 @@ theme: default
 ---
 # Project Description
 
-Modern chess engines excel at calculating optimal moves but often fail to explain *why* those moves are strong in terms that humans understand. This project aims to bridge that gap by building a neural network capable of detecting tactical and positional motifs in chess positions.
-
-Using a large dataset of annotated chess puzzles, the system will analyze board states and output the motifs present in each position as a multi-label classification problem. The tool is designed primarily as a research project, focusing on neural network design, dataset engineering, and motif detection accuracy rather than production deployment.
-
+- Modern chess engines excel at calculating optimal moves but often fail to explain *why* those moves are strong in terms that humans understand. This project aims to bridge that gap by building a neural network capable of detecting tactical and positional motifs in chess positions.
+- Using a large dataset of annotated chess puzzles, the system will analyze board states and output the motifs present in each position as a multi-label classification problem.
 The end goal is to create a fast, interpretable system that enhances chess learning by identifying patterns such as forks, pins, and discovered attacks.
 
 ---
@@ -50,51 +48,30 @@ The end goal is to create a fast, interpretable system that enhances chess learn
 ## Dataset
 - Source: Lichess puzzle dataset (via Kaggle).
 - File size: ~460MB CSV containing hundreds of thousands of puzzles, with millions available.
-- Sprint 1 subset: **10,000 puzzles** for proof-of-concept.
+- Source: [Lichess Dataset found on Kaggle](https://www.kaggle.com/datasets/annafabris/lichess-chess-puzzles)
 
 **Key Fields Used:**
 - FEN (board state)
 - Themes (motif labels)
 - Moves (optional auxiliary data)
-- Rating / Popularity (optional filtering for data quality)
 
 ## Data Pipeline
-1. Sample 10,000 representative puzzles.
-2. Convert FEN strings into 8×8×12 tensors (piece-type channels).
+2. Convert FEN strings into 8×8×29 tensor
 3. Map puzzle themes to a standardized motif set (~60 labels).
 4. Generate multi-label vectors.
 5. Split dataset into training (70%), validation (15%), and test (15%).
-6. Store processed tensors for efficient training.
 
-## Neural Network Architecture (Initial)
+## Neural Network Architecture
 
 **Type:** Convolutional Neural Network (CNN)
 
-**Approximate Size:** ~50k–200k parameters  
-(Small enough for fast laptop GPU training)
-
-**Activation Function:** Sigmoid Activation
-
-**Structure:**
-- Input: 8×8×12 tensor
-- 2–4 convolutional layers (32–64 filters, 3×3 kernels)
-- Minimal pooling to preserve spatial relationships
-- 1–2 dense layers (128–256 neurons)
-- Output layer: ~130 sigmoid neurons (multi-label)
+**Approximate Size:** ~317,000 parameters  
 
 **Training Hardware:**
 - Laptop GPU (4GB GDDR6, Ampere architecture)
-- Expected fast training and millisecond-level inference.
-
-**Design Goal:**  
-Start small for rapid experimentation, then scale dataset and model complexity in Sprint 2.
-
----
-# Tests
 
 ## Model Evaluation
-- Multi-label F1 score
-- Precision and recall per motif
+- Macro F1 score
 - Validation vs. training loss to detect overfitting
 
 ## Functional Tests
@@ -110,22 +87,19 @@ Start small for rapid experimentation, then scale dataset and model complexity i
 
 ---
 # Team Members and Roles
-
-**Primary Researcher / Developer**
+**Dillon Carpenter**
+**Primary Developer**
 - Dataset engineering and preprocessing  
 - Neural network design and training  
 - Evaluation and experimentation  
 - UI implementation  
-- Research documentation and paper writing  
 
 ---
 # Links to documentation, code, and so on
 
 *(To be populated during development)*
 
-- GitHub Repository: TBD  
-- Dataset Source: Lichess Puzzle Database (Kaggle)  
-- Research Notes: TBD  
-- Architecture Diagrams: TBD  
+- GitHub Repository:https://github.com/DillonCarpenter/ASE-485-ChessMotifNN
+- Dataset Source: [Lichess Dataset found on Kaggle](https://www.kaggle.com/datasets/annafabris/lichess-chess-puzzles)
 ---
 
