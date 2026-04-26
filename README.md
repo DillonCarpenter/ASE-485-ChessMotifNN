@@ -38,7 +38,7 @@ The end goal is to create a fast, interpretable system that enhances chess learn
 
 ### Readable UI
 **Requirements:**
-- Display chess boards in ASCII/terminal format. - COmpleted
+- Display chess boards in ASCII/terminal format. - Completed
 - Output detected motifs in a clear list. - Completed
 - Maintain fast response time for near real-time analysis. - Completed
 
@@ -47,20 +47,20 @@ The end goal is to create a fast, interpretable system that enhances chess learn
 
 ## Dataset
 - Source: Lichess puzzle dataset (via Kaggle).
-- File size: ~460MB CSV containing hundreds of thousands of puzzles, with millions available.
+- File size: ~2.5 million puzzles.
 - Source: [Lichess Dataset found on Kaggle](https://www.kaggle.com/datasets/annafabris/lichess-chess-puzzles)
 
 **Key Fields Used:**
 - FEN (board state)
 - Themes (motif labels)
-- Moves (optional auxiliary data)
-
+- Moves (solution space)
+---
 ## Data Pipeline
-2. Convert FEN strings into 8×8×29 tensor
-3. Map puzzle themes to a standardized motif set (~60 labels).
-4. Generate multi-label vectors.
-5. Split dataset into training (70%), validation (15%), and test (15%).
-
+1. Convert FEN strings into 8×8×29 tensor
+2. Map puzzle themes to a standardized motif set (~60 labels).
+3. Generate multi-label vectors.
+4. Split dataset into training (70%), validation (15%), and test (15%).
+---
 ## Neural Network Architecture
 
 **Type:** Convolutional Neural Network (CNN)
@@ -69,21 +69,10 @@ The end goal is to create a fast, interpretable system that enhances chess learn
 
 **Training Hardware:**
 - Laptop GPU (4GB GDDR6, Ampere architecture)
-
+---
 ## Model Evaluation
 - Macro F1 score
 - Validation vs. training loss to detect overfitting
-
-## Functional Tests
-- Verify correct FEN-to-tensor conversion.
-- Confirm accurate motif vector generation.
-- Ensure inference runs within milliseconds.
-- Validate terminal output readability.
-
-## Experimentation
-- Compare performance across architectures.
-- Analyze rare motif prediction accuracy.
-- Perform error analysis on misclassified positions.
 
 ---
 # Team Members and Roles
