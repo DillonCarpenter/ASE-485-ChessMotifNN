@@ -41,4 +41,19 @@ theme: default
 ![Validation and Training Loss](final_training.png)
 
 ---
+## Retrospective
+---
+### What went wrong
+- Model Kept Overfitting
+  - I used a randomly 10k subset of the dataset
+  - This meant that some motifs couldn't be learned
+---
+### What went well
+- I learned a lot of different regularization techniques
+- When I used the entire dataset to to train the model, the overfitting problem disappeared.
+---
+### Improvement plan
+- Continue working consistently
+- Fix CPU bottleneck problem
+---
 #### Questions?
