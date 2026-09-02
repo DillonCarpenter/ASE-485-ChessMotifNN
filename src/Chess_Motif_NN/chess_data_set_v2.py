@@ -67,7 +67,7 @@ theme_to_index = {
 }
 def fen_to_tensor(fen: str, moves: list[str]) -> torch.Tensor:
     """
-    Convert a FEN string into a 9x8x8 tensor.
+    Convert a FEN string into a 29x8x8 tensor.
     Channels: 6 piece types * 2 colors (white, black) + 1 channel for side to move + 4 channels for castling rights + 
     1 channel for en passant target square + 1 channel for halfmove clock
     10 channels for solution sequence (from and to squares for 5 moves). We're stopping at 5 moves deep after move[0] 

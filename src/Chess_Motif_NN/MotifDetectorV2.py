@@ -1,12 +1,10 @@
-import torch.multiprocessing as mp
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 import numpy as np
-from chess_data_set_v2 import ChessDataset
+from chess_data_set_v3 import ChessDataset
 from torch.utils.data import DataLoader, random_split
-from sklearn.metrics import precision_score, recall_score, f1_score
 import os
 
 
@@ -25,7 +23,7 @@ def load_data(csv_path="data/lichess_puzzle_transformed.csv"):
     # ----------------------------
     # Sample Data (simulate FEN → tensor)
     # ----------------------------
-    dataset = ChessDataset(csv_path = csv_path)
+    dataset = ChessDataset()
 
     # Define sizes and split
     train_size = int(0.7 * len(dataset))
@@ -41,7 +39,6 @@ def load_data(csv_path="data/lichess_puzzle_transformed.csv"):
                              pin_memory=True, num_workers=4, persistent_workers=True)
     test_loader  = DataLoader(test_set, batch_size=512, shuffle=False,
                              pin_memory=True, num_workers=4, persistent_workers=True)
-
     return dataset, train_loader, val_loader, test_loader
 
 
@@ -96,7 +93,9 @@ class ResBlock(nn.Module):
 
 if __name__ == "__main__":
     dataset, train_loader, val_loader, test_loader = load_data()
-    print("Data Loaded")
+    print("Dataset loaded")
+    print(train_loader.dataset.dataset.__class__)
+    print(train_loader.dataset.dataset.__module__)
     # Instantiate the model
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = MotifNet().to(device)
@@ -106,11 +105,8 @@ if __name__ == "__main__":
     # ----------------------------
     # Loss function and optimizer
     # ----------------------------
-    all_labels = []
-    for _, target in dataset:
-        all_labels.append(target)
-
-    y_train = torch.stack(all_labels)  # shape [num_samples, num_classes]
+    dataset_for_weights = ChessDataset()
+    y_train = dataset_for_weights.get_targets()
     num_pos = y_train.sum(dim=0)
     num_neg = y_train.shape[0] - num_pos
     pos_weight = num_neg / (num_pos + 1e-5)  # avoid division by zero

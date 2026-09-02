@@ -1,5 +1,5 @@
 import torch
-from MotifDetector import MotifNet, ResBlock, load_data
+from MotifDetectorV2 import MotifNet, ResBlock, load_data
 from sklearn.metrics import f1_score, roc_auc_score
 import pandas as pd
 import numpy as np
@@ -44,8 +44,8 @@ if __name__ == "__main__":
     counts = np.array([label_counts[l] for l in LABELS])
     total = len(df)
     print()
-    model = MotifNet(num_blocks=2).to(DEVICE)
-    model.load_state_dict(torch.load("models/overnight_best_model.pt", map_location=DEVICE))
+    model = MotifNet().to(DEVICE)
+    model.load_state_dict(torch.load("models/overnight_best_modelVersion2.pt", map_location=DEVICE))
     model.eval()
     print("Evaluating on test set...")
     all_probs, all_targets = [], []
