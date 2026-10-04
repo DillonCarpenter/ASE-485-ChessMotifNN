@@ -1,7 +1,7 @@
 import torch
 import chess
 import chess.engine
-from MotifDetector import MotifNet
+from .MotifDetector import MotifNet
 import numpy as np
 from chess.engine import MateGiven
 import sys
