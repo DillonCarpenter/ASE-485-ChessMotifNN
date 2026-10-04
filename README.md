@@ -36,12 +36,31 @@ The end goal is to create a fast, interpretable system that enhances chess learn
 - Display best moves alongside detected motifs. - Completed
 - Use engine output as a validation mechanism for predictions. - Completed
 
-### Readable UI
+### Readable UI (Soon to be Outdated)
 **Requirements:**
 - Display chess boards in ASCII/terminal format. - Completed
 - Output detected motifs in a clear list. - Completed
 - Maintain fast response time for near real-time analysis. - Completed
+---
+## Agentic Workflow Features
 
+### Google's Agent Development Kit Integration
+- Integrate Google's Agent Development Kit (ADK) into the project
+- Define the chess analysis capabilities of the project as agent callable tools
+- Handle tool failures without crashing the agent workflow
+- Provide a reproducible way to run an agent workflow locally
+
+### PGN Analysis Tool
+- Accept and Parse a valid PGN input
+- Use Engine Analysis on resulting Positions
+- Associate Engine Evaluation with correct game position and half move
+- Return correct board position when given a half move as an input
+
+### Model Routing
+- Define tasks that can be handled with a simple model
+- Define tasks that can be handled by an advanced model
+- Analysis through testing
+- Potentially programmable behavior?
 ---
 # Data Model and Architecture
 
